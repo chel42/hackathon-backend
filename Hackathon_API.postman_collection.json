@@ -1,0 +1,394 @@
+{
+  "info": {
+    "name": "Hackathon API",
+    "description": "Collection Postman pour tester l'API Hackathon",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "auth": {
+    "type": "bearer",
+    "bearer": [
+      {
+        "key": "token",
+        "value": "{{admin_token}}",
+        "type": "string"
+      }
+    ]
+  },
+  "item": [
+    {
+      "name": "0. Setup - Get Hackathon ID",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "if (pm.response.code === 200) {",
+              "    const jsonData = pm.response.json();",
+              "    pm.collectionVariables.set('hackathon_id', jsonData.id);",
+              "}"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{base_url}}/hackathons/public",
+          "host": ["{{base_url}}"],
+          "path": ["hackathons", "public"]
+        },
+        "description": "Récupère l'ID du hackathon public. Exécutez cette requête en premier !"
+      }
+    },
+    {
+      "name": "Auth",
+      "item": [
+        {
+          "name": "1. Register Admin",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 201) {",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.collectionVariables.set('admin_email', jsonData.user.email);",
+                  "    pm.collectionVariables.set('admin_user_id', jsonData.user.id);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"admin-{{$timestamp}}@test.com\",\n  \"password\": \"admin123\",\n  \"nom\": \"Admin\",\n  \"prenom\": \"Test\",\n  \"hackathonId\": \"{{hackathon_id}}\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/auth/register",
+              "host": ["{{base_url}}"],
+              "path": ["auth", "register"]
+            },
+            "description": "Créer un compte admin. Récupère le hackathon_id depuis GET /hackathons/public d'abord."
+          }
+        },
+        {
+          "name": "2. Login Admin",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 201) {",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.collectionVariables.set('admin_token', jsonData.access_token);",
+                  "    pm.collectionVariables.set('admin_user_id', jsonData.user.id);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{admin_email}}\",\n  \"password\": \"admin123\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/auth/login",
+              "host": ["{{base_url}}"],
+              "path": ["auth", "login"]
+            },
+            "description": "Se connecter avec l'admin créé. Le token sera automatiquement sauvegardé."
+          }
+        },
+        {
+          "name": "Register User",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"user-{{$timestamp}}@test.com\",\n  \"password\": \"user123\",\n  \"nom\": \"User\",\n  \"prenom\": \"Test\",\n  \"promo\": \"L2\",\n  \"technologies\": [\"React\", \"Node.js\"],\n  \"hackathonId\": \"{{hackathon_id}}\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/auth/register",
+              "host": ["{{base_url}}"],
+              "path": ["auth", "register"]
+            }
+          }
+        },
+        {
+          "name": "Login User",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 201) {",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.collectionVariables.set('user_token', jsonData.access_token);",
+                  "    pm.collectionVariables.set('user_id', jsonData.user.id);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"user@test.com\",\n  \"password\": \"user123\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/auth/login",
+              "host": ["{{base_url}}"],
+              "path": ["auth", "login"]
+            }
+          }
+        },
+        {
+          "name": "Get Profile",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/auth/profile",
+              "host": ["{{base_url}}"],
+              "path": ["auth", "profile"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Hackathons",
+      "item": [
+        {
+          "name": "Get Public Hackathon",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/hackathons/public",
+              "host": ["{{base_url}}"],
+              "path": ["hackathons", "public"]
+            }
+          }
+        },
+        {
+          "name": "Get Past Hackathons",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/hackathons/past?page=1&limit=10",
+              "host": ["{{base_url}}"],
+              "path": ["hackathons", "past"],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "limit",
+                  "value": "10"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Create Hackathon (Admin)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nom\": \"Hackathon Test 2026\",\n  \"description\": \"Description du hackathon\",\n  \"dateDebut\": \"2026-02-15T09:00:00Z\",\n  \"dateFin\": \"2026-02-17T18:00:00Z\",\n  \"dateLimiteInscription\": \"2026-02-10T23:59:59Z\",\n  \"status\": \"UPCOMING\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/hackathons",
+              "host": ["{{base_url}}"],
+              "path": ["hackathons"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Annonces",
+      "item": [
+        {
+          "name": "Get Public Annonces",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/annonces/public",
+              "host": ["{{base_url}}"],
+              "path": ["annonces", "public"]
+            }
+          }
+        },
+        {
+          "name": "Create Annonce (Admin)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"titre\": \"Nouvelle annonce\",\n  \"contenu\": \"Contenu de l'annonce\",\n  \"cible\": \"PUBLIC\",\n  \"hackathonId\": \"hackathon-test-2026\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/admin/annonces",
+              "host": ["{{base_url}}"],
+              "path": ["admin", "annonces"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Admin",
+      "item": [
+        {
+          "name": "Get Dashboard",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/admin/dashboard",
+              "host": ["{{base_url}}"],
+              "path": ["admin", "dashboard"]
+            }
+          }
+        },
+        {
+          "name": "Get Metrics",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/admin/monitoring/metrics",
+              "host": ["{{base_url}}"],
+              "path": ["admin", "monitoring", "metrics"]
+            }
+          }
+        },
+        {
+          "name": "Get Logs IA",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/admin/monitoring/logs?page=1&limit=50",
+              "host": ["{{base_url}}"],
+              "path": ["admin", "monitoring", "logs"],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "limit",
+                  "value": "50"
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "AI",
+      "item": [
+        {
+          "name": "Analyze Inscription",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/ai/analyze-inscription/{{user_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["ai", "analyze-inscription", "{{user_id}}"]
+            }
+          }
+        }
+      ]
+    }
+  ],
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "http://localhost:3000",
+      "type": "string"
+    },
+    {
+      "key": "admin_token",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "user_id",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "admin_email",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "admin_user_id",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "user_token",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "hackathon_id",
+      "value": "hackathon-test-2026",
+      "type": "string"
+    }
+  ]
+}
+

@@ -1,0 +1,214 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum Role {
+  USER
+  ADMIN
+}
+
+enum HackathonStatus {
+  UPCOMING
+  ONGOING
+  PAST
+}
+
+enum AnnonceCible {
+  PUBLIC
+  INSCRITS
+}
+
+enum TypeEvenementSurveillance {
+  INSCRIPTION
+  CONNEXION
+  ACTION_ADMIN
+  ERREUR
+  PERFORMANCE
+}
+
+enum NiveauEvenementSurveillance {
+  INFO
+  WARNING
+  ERROR
+  CRITICAL
+}
+
+enum Promo {
+  L1
+  L2
+}
+
+enum StatutInscription {
+  VALIDE
+  EN_ATTENTE
+  REFUSE
+}
+
+enum TypeNotification {
+  EMAIL
+  SITE
+}
+
+enum TypeIALog {
+  ANALYSE
+  SURVEILLANCE
+  SUGGESTION
+}
+
+model User {
+  id                     String                  @id @default(uuid())
+  email                  String                  @unique
+  password               String
+  nom                    String
+  prenom                 String
+  role                   Role                    @default(USER)
+  createdAt              DateTime                @default(now())
+  updatedAt              DateTime                @updatedAt
+  inscriptions           Inscription[]
+  iaLogs                 IALog[]
+  evenementsSurveillance EvenementSurveillance[]
+  notifications          Notification[]
+
+  @@index([email])
+  @@index([role])
+  @@index([createdAt])
+}
+
+model Hackathon {
+  id                    String          @id @default(uuid())
+  nom                   String
+  description           String
+  themes                Json? // JSONB pour matching IA
+  dateDebut             DateTime
+  dateFin               DateTime
+  dateLimiteInscription DateTime
+  status                HackathonStatus @default(UPCOMING)
+  createdAt             DateTime        @default(now())
+  updatedAt             DateTime        @updatedAt
+  inscriptions          Inscription[]
+  annonces              Annonce[]
+
+  @@index([status, dateDebut])
+  @@index([dateLimiteInscription])
+  @@index([status])
+}
+
+model Inscription {
+  id           String            @id @default(uuid())
+  userId       String
+  hackathonId  String
+  promo        Promo? // ENUM('L1','L2')
+  technologies Json? // JSONB pour technologies spécifiques à cette inscription
+  statut       StatutInscription @default(EN_ATTENTE)
+  createdAt    DateTime          @default(now())
+  user         User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  hackathon    Hackathon         @relation(fields: [hackathonId], references: [id], onDelete: Cascade)
+  analysesIA   AnalyseIA[]
+
+  @@unique([userId, hackathonId])
+  @@index([hackathonId])
+  @@index([userId])
+  @@index([createdAt])
+  @@index([statut])
+}
+
+model Annonce {
+  id            String         @id @default(uuid())
+  titre         String
+  contenu       String
+  cible         AnnonceCible
+  sentAt        DateTime? // Timestamp d'envoi (pour traçabilité)
+  hackathonId   String?
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+  hackathon     Hackathon?     @relation(fields: [hackathonId], references: [id], onDelete: SetNull)
+  notifications Notification[]
+
+  @@index([hackathonId])
+  @@index([createdAt])
+  @@index([cible, createdAt])
+  @@index([sentAt])
+}
+
+model IALog {
+  id          String    @id @default(uuid())
+  userId      String?
+  type        TypeIALog // ENUM('ANALYSE','SURVEILLANCE','SUGGESTION')
+  input       Json? // JSONB - données d'entrée de l'IA
+  output      Json? // JSONB - données de sortie de l'IA
+  score       Float?
+  suggestions String[]
+  metadata    Json? // Métadonnées supplémentaires (pour compatibilité)
+  createdAt   DateTime  @default(now())
+  user        User?     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([createdAt])
+  @@index([type])
+  @@index([type, createdAt])
+}
+
+model EvenementSurveillance {
+  id        String                      @id @default(uuid())
+  type      TypeEvenementSurveillance
+  valeur    Float? // Valeur mesurée (ex: inscriptions_per_hour = 50)
+  seuil     Float? // Seuil de déclenchement (ex: seuil = 100)
+  niveau    NiveauEvenementSurveillance @default(INFO)
+  message   String
+  details   Json?
+  userId    String?
+  createdAt DateTime                    @default(now())
+  user      User?                       @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@index([type])
+  @@index([niveau])
+  @@index([createdAt])
+  @@index([type, niveau, createdAt])
+  @@index([userId])
+  @@index([valeur, seuil])
+}
+
+// Nouveau modèle : Notification (système de notifications planifiées)
+model Notification {
+  id          String           @id @default(uuid())
+  type        TypeNotification // EMAIL ou SITE
+  message     String
+  scheduledAt DateTime? // Date de programmation (pour J-7, J-3, J-1)
+  sent        Boolean          @default(false)
+  sentAt      DateTime? // Timestamp d'envoi effectif
+  userId      String
+  annonceId   String?
+  createdAt   DateTime         @default(now())
+  user        User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  annonce     Annonce?         @relation(fields: [annonceId], references: [id], onDelete: SetNull)
+
+  @@index([userId])
+  @@index([annonceId])
+  @@index([scheduledAt])
+  @@index([sent])
+  @@index([type, sent])
+}
+
+// Nouveau modèle : AnalyseIA (résultat métier de l'analyse IA)
+model AnalyseIA {
+  id                 String      @id @default(uuid())
+  inscriptionId      String      @unique
+  scoreMatching      Float? // Score de matching (0-100)
+  scoreSpam          Float? // Score de spam (0-100)
+  suggestionsEquipes Json? // JSONB - suggestions de formation d'équipes
+  autoTags           Json? // JSONB - tags automatiques générés par l'IA
+  createdAt          DateTime    @default(now())
+  inscription        Inscription @relation(fields: [inscriptionId], references: [id], onDelete: Cascade)
+
+  @@index([inscriptionId])
+  @@index([scoreMatching])
+  @@index([scoreSpam])
+  @@index([createdAt])
+}
