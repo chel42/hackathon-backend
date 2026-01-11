@@ -1,93 +1,44 @@
-// Charger les variables d'environnement EN PREMIER
-// Utiliser require pour garantir l'ordre d'exécution
-require('./config/env.config');
+// 🚨 VERSION ULTRA-MINIMALE POUR RENDER FREE (512MB RAM)
+// CHARGEMENT ABSOLUMENT MINIMAL - AUCUNE FONCTIONNALITÉ LOURDE
 
 import { NestFactory } from '@nestjs/core';
-import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
-import { WINSTON_MODULE_NEST_PROVIDER } from 'nest-winston';
 import { AppModule } from './app.module';
-import { ConditionalValidationPipe } from './common/pipes/conditional-validation.pipe';
 
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule);
+  try {
+    // 🚨 LOGGER COMPLÈTEMENT DÉSACTIVÉ pour économiser RAM
+    const app = await NestFactory.create(AppModule, {
+      logger: false, // PAS DE LOG DU TOUT
+    });
 
-  // Configuration CORS pour autoriser le frontend Next.js
-  // Utiliser une fonction pour vérifier l'origine dynamiquement
-  app.enableCors({
-    origin: (origin, callback) => {
-      // Autoriser les requêtes sans origine (Postman, etc.)
-      if (!origin) {
-        return callback(null, true);
-      }
+    // 🚨 CORS ULTRA-SIMPLE
+    app.enableCors({
+      origin: true, // Accepter tout pour l'instant
+      credentials: false,
+    });
 
-      const allowedOrigins = [
-        'http://localhost:9002', // Frontend Next.js
-        'http://localhost:5173', // Vite (si utilisé)
-        'http://localhost:3001', // Autre port possible
-        'http://127.0.0.1:9002',
-        'http://127.0.0.1:5173',
-      ];
+    // 🚨 PORT FIXE POUR RENDER (pas de fallback)
+    const port = parseInt(process.env.PORT || '10000');
 
-      if (allowedOrigins.includes(origin)) {
-        callback(null, true);
-      } else {
-        // En développement, accepter localhost avec n'importe quel port
-        if (
-          origin.startsWith('http://localhost:') ||
-          origin.startsWith('http://127.0.0.1:') ||
-          // Autoriser les IPs locales (LAN) en dev (ex: http://192.168.x.x:9002)
-          origin.startsWith('http://192.168.') ||
-          origin.startsWith('http://10.') ||
-          // Plage privée 172.16.0.0 -> 172.31.255.255
-          /^http:\/\/172\.(1[6-9]|2\d|3[0-1])\./.test(origin)
-        ) {
-          callback(null, true);
-        } else {
-          callback(new Error('Not allowed by CORS'));
-        }
-      }
-    },
-    credentials: true,
-    methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
-    allowedHeaders: ['Content-Type', 'Authorization', 'Accept'],
-    exposedHeaders: ['Authorization'],
-  });
+    // 🚨 DÉMARRAGE SYNCHRONE - pas d'await pour économiser mémoire
+    app.listen(port, '0.0.0.0').then(() => {
+      // 🚨 LOG MINIMAL ABSOLUMENT ESSENTIEL
+      console.log(`OK:${port}`); // Format simple pour Render
+    }).catch((error) => {
+      console.error(`ERROR:${error.message}`);
+      process.exit(1);
+    });
 
-  app.useLogger(app.get(WINSTON_MODULE_NEST_PROVIDER));
-
-  // ValidationPipe global personnalisé qui skip la validation si pas de DTO classique
-  // Cela permet au ZodValidationPipe de gérer la validation pour les endpoints qui l'utilisent
-  app.useGlobalPipes(
-    new ConditionalValidationPipe({
-      whitelist: true,
-      forbidNonWhitelisted: true,
-      transform: true,
-      skipMissingProperties: false,
-      skipNullProperties: false,
-      skipUndefinedProperties: false,
-      transformOptions: {
-        enableImplicitConversion: false,
-      },
-    }),
-  );
-
-  const config = new DocumentBuilder()
-    .setTitle('API Hackathon')
-    .setDescription('API pour la gestion des hackathons')
-    .setVersion('1.0')
-    .addBearerAuth()
-    .build();
-  const document = SwaggerModule.createDocument(app, config);
-  SwaggerModule.setup('api', app, document);
-
-  const port = process.env.PORT || 3000;
-  const host = process.env.HOST || '0.0.0.0';
-  await app.listen(port, host);
-  console.log(
-    `Application is running on: http://${host === '0.0.0.0' ? 'localhost' : host}:${port}`,
-  );
-  console.log(
-    `Swagger documentation: http://${host === '0.0.0.0' ? 'localhost' : host}:${port}/api`,
-  );
+  } catch (error) {
+    console.error(`FATAL:${error.message}`);
+    process.exit(1);
+  }
 }
+
+// 🚨 GESTION D'ERREUR MINIMALE
+process.on('uncaughtException', (error) => {
+  console.error(`CRASH:${error.message}`);
+  process.exit(1);
+});
+
 bootstrap();

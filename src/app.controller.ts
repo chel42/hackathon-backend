@@ -9,4 +9,14 @@ export class AppController {
   getHello(): string {
     return this.appService.getHello();
   }
+
+  // 🚨 ENDPOINT DE SANTÉ MINIMAL pour Render
+  @Get('health')
+  getHealth(): object {
+    return {
+      status: 'ok',
+      timestamp: Date.now(),
+      memory: process.memoryUsage(),
+    };
+  }
 }

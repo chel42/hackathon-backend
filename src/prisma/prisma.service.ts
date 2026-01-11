@@ -1,52 +1,28 @@
-import {
-  Injectable,
-  OnModuleInit,
-  OnModuleDestroy,
-  Logger,
-} from '@nestjs/common';
+import { Injectable, OnModuleInit, OnModuleDestroy } from '@nestjs/common';
 import { PrismaClient } from '@prisma/client';
 
 @Injectable()
-export class PrismaService
-  extends PrismaClient
-  implements OnModuleInit, OnModuleDestroy
-{
-  private readonly logger = new Logger(PrismaService.name);
-
+export class PrismaService extends PrismaClient implements OnModuleInit, OnModuleDestroy {
   constructor() {
-    // Vérifier que DATABASE_URL est défini
-    const databaseUrl = process.env.DATABASE_URL;
-
-    if (!databaseUrl) {
-      const errorMessage =
-        "DATABASE_URL n'est pas défini dans les variables d'environnement. " +
-        'Veuillez créer un fichier .env à la racine du projet avec DATABASE_URL.';
-      console.error('❌', errorMessage);
-      throw new Error(
-        'DATABASE_URL est requis. Créez un fichier .env à la racine du projet avec DATABASE_URL.',
-      );
+    // Vérification minimale de DATABASE_URL
+    if (!process.env.DATABASE_URL) {
+      throw new Error('DATABASE_URL is required');
     }
 
-    // Configuration simple et compatible avec tous les environnements
+    // Configuration ultra-minimale pour économiser la mémoire
     super({
-      log: ['warn', 'error'],
+      // 🚫 AUCUN LOGGING en production pour économiser la RAM
+      log: process.env.NODE_ENV === 'production' ? [] : ['error'],
     });
-
-    this.logger.log('PrismaClient initialisé');
   }
 
   async onModuleInit() {
-    try {
-      await this.$connect();
-      this.logger.log('Connecté à la base de données PostgreSQL');
-    } catch (error: any) {
-      this.logger.error('Erreur de connexion à la base de données:', error);
-      throw error;
-    }
+    // Connexion silencieuse, pas de logs pour économiser la mémoire
+    await this.$connect();
   }
 
   async onModuleDestroy() {
+    // Déconnexion propre
     await this.$disconnect();
-    this.logger.log('Déconnecté de la base de données PostgreSQL');
   }
 }
