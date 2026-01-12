@@ -1,6 +1,8 @@
 // ✅ VERSION COMPLÈTE AVEC TOUTES LES FONCTIONNALITÉS
 // Backend NestJS complet restauré
 
+import './config/env.config'; // Charger les variables d'environnement AVANT tout
+
 import { NestFactory } from '@nestjs/core';
 import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
 import { AppModule } from './app.module';
