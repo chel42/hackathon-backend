@@ -125,12 +125,24 @@ export class AuthService {
       },
     });
 
-    // Envoyer l'email d'accusé de réception via BullMQ
+    // Envoyer l'email d'accusé de réception via BullMQ avec toutes les informations
     await this.queueService.addEmailJob('accus_reception', {
       email: user.email,
       nom: user.nom,
       prenom: user.prenom,
-      hackathonId: registerDto.hackathonId,
+      promo: registerDto.promo,
+      technologies: registerDto.technologies,
+      hackathon: {
+        id: hackathon.id,
+        nom: hackathon.nom,
+        description: hackathon.description,
+        dateDebut: hackathon.dateDebut,
+        dateFin: hackathon.dateFin,
+        dateLimiteInscription: hackathon.dateLimiteInscription,
+        registrationGoal: hackathon.registrationGoal,
+        currentRegistrations: hackathon.currentRegistrations,
+        status: hackathon.status,
+      },
     });
 
     // Émettre l'événement temps réel de nouvelle inscription
@@ -148,6 +160,9 @@ export class AuthService {
       inscription: {
         id: inscription.id,
         hackathonId: inscription.hackathonId,
+        promo: inscription.promo,
+        technologies: inscription.technologies,
+        statut: inscription.statut,
         createdAt: inscription.createdAt,
       },
     };

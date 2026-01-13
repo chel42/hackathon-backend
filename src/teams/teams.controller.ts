@@ -37,12 +37,19 @@ export class TeamsController {
   }
 
   @Get('hackathon/:hackathonId')
+  @ApiParam({ name: 'hackathonId', description: 'ID du hackathon' })
+  @ApiOperation({ summary: 'Lister les équipes publiques pour un hackathon' })
+  async getTeamsByHackathon(@Param('hackathonId') hackathonId: string) {
+    return this.teamsService.getPublicTeamsByHackathon(hackathonId);
+  }
+
+  @Get('admin/hackathon/:hackathonId')
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(Role.ADMIN)
   @ApiBearerAuth()
   @ApiParam({ name: 'hackathonId', description: 'ID du hackathon' })
-  @ApiOperation({ summary: 'Lister les équipes pour un hackathon (Admin)' })
-  async getTeamsByHackathon(@Param('hackathonId') hackathonId: string) {
+  @ApiOperation({ summary: 'Lister toutes les équipes pour un hackathon (Admin)' })
+  async getAllTeamsByHackathon(@Param('hackathonId') hackathonId: string) {
     return this.teamsService.getTeamsByHackathon(hackathonId);
   }
 

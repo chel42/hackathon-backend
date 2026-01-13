@@ -1,0 +1,21 @@
+# Configuration complète pour Hackaton/.env
+
+# Base de données PostgreSQL
+DATABASE_URL="postgresql://username:password@localhost:5432/hackathon"
+
+# JWT Secret pour l'authentification
+JWT_SECRET="mon-secret-jwt-local-development"
+
+# Configuration SMTP pour les emails (IMPORTANT - variables corrigées)
+SMTP_HOST="smtp.gmail.com"
+SMTP_PORT=587
+SMTP_USER="bienvenuemoukouri04@gmail.com"
+SMTP_PASS="xtulmrjjmmhhcupz"
+SMTP_FROM="bienvenuemoukouri04@gmail.com"
+SMTP_SECURE=false
+
+# Port du serveur
+PORT=3000
+
+# Host optionnel
+HOST="0.0.0.0"

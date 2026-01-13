@@ -1,0 +1,23 @@
+# COPIE DU FICHIER .env - À COPIER DANS TON .env
+
+# Configuration pour développement local
+# REMPLIS LES VALEURS CI-DESSOUS AVEC TES PARAMÈTRES
+
+# Base de données PostgreSQL locale
+DATABASE_URL="postgresql://username:password@localhost:5432/hackathon"
+
+# JWT Secret pour l'authentification
+JWT_SECRET="mon-secret-jwt-local-development"
+
+# Configuration SMTP pour les emails
+EMAIL_HOST="smtp.gmail.com"
+EMAIL_PORT=587
+EMAIL_USER="bienvenuemoukouri04@gmail.com"
+EMAIL_PASS="xtul mrjj mmhh cupz"
+
+# Port du serveur
+PORT=3000
+
+# === FIN DU FICHIER ===
+# Copie tout le contenu ci-dessus dans ton fichier .env
+# Puis remplace username:password par tes vraies infos PostgreSQL

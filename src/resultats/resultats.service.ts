@@ -307,11 +307,14 @@ export class ResultatsService {
       const filePath = path.join(this.uploadsDir, fileName);
       fs.writeFileSync(filePath, file.buffer);
 
+      console.log(`📄 Extraction des participants depuis le PDF...`);
       const extractedParticipants =
         await this.pdfExtractionService.extractParticipantsFromPdf(file.buffer);
+      console.log(`📊 ${extractedParticipants.length} participants extraits du PDF`);
 
       // Matcher le PDF sur tous les participants du hackathon (pas uniquement VALIDE),
       // sinon on rate les EN_ATTENTE, etc.
+      console.log(`👥 Récupération des inscrits au hackathon ${hackathonId}...`);
       const inscriptions = await this.prisma.inscription.findMany({
         where: {
           hackathonId,
@@ -319,6 +322,7 @@ export class ResultatsService {
         },
         include: { user: true },
       });
+      console.log(`📋 ${inscriptions.length} inscriptions trouvées`);
 
       const users = inscriptions.map((ins) => ({
         id: ins.user.id,
@@ -326,12 +330,15 @@ export class ResultatsService {
         nom: ins.user.nom,
         prenom: ins.user.prenom,
       }));
+      console.log(`👤 ${users.length} utilisateurs inscrits (admins exclus)`);
 
+      console.log(`🔗 Début du matching...`);
       const matchedEmails =
         this.pdfExtractionService.matchParticipantsWithUsers(
           extractedParticipants,
           users,
         );
+      console.log(`✅ ${matchedEmails.length} correspondances trouvées`);
 
       const extractedEmails = extractedParticipants
         .map((p) => (p.email || '').trim())

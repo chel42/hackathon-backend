@@ -39,6 +39,29 @@ export class TeamsService {
     });
   }
 
+  async getPublicTeamsByHackathon(hackathonId: string) {
+    const hackathon = await this.prisma.hackathon.findUnique({
+      where: { id: hackathonId },
+    });
+    if (!hackathon)
+      throw new NotFoundException(`Hackathon ${hackathonId} introuvable`);
+
+    return this.prisma.team.findMany({
+      where: { hackathonId },
+      select: {
+        id: true,
+        nom: true,
+        description: true,
+        projetNom: true,
+        createdAt: true,
+        _count: {
+          select: { members: true }
+        }
+      },
+      orderBy: { createdAt: 'desc' },
+    });
+  }
+
   async getTeamsByHackathon(hackathonId: string) {
     const hackathon = await this.prisma.hackathon.findUnique({
       where: { id: hackathonId },

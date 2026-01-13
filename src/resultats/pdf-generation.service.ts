@@ -45,21 +45,50 @@ export class PdfGenerationService {
         const pageWidth = doc.page.width;
         const pageHeight = doc.page.height;
 
+        // Dimensions des colonnes pour un vrai tableau
+        const colWidths = [30, 80, 80, 170, 70, 70]; // N°, Nom, Prénom, Email, Classe, Statut
+        const colPositions = [
+          margin,
+          margin + colWidths[0],
+          margin + colWidths[0] + colWidths[1],
+          margin + colWidths[0] + colWidths[1] + colWidths[2],
+          margin + colWidths[0] + colWidths[1] + colWidths[2] + colWidths[3],
+          margin + colWidths[0] + colWidths[1] + colWidths[2] + colWidths[3] + colWidths[4]
+        ];
+
         const drawHeader = () => {
           const y = doc.y;
+
+          // Dessiner les bordures du tableau
+          const tableWidth = colWidths.reduce((sum, width) => sum + width, 0);
+          const tableHeight = rowHeight;
+
+          // Bordure extérieure
+          doc
+            .rect(margin, y, tableWidth, tableHeight)
+            .stroke();
+
+          // Lignes verticales pour les colonnes
+          colPositions.forEach((x, index) => {
+            if (index > 0) {
+              doc
+                .moveTo(x, y)
+                .lineTo(x, y + tableHeight)
+                .stroke();
+            }
+          });
+
+          // En-têtes des colonnes
           doc
             .fontSize(10)
             .font('Helvetica-Bold')
-            .text('N°', margin, y, { width: 30 });
-          doc.text('Nom', margin + 35, y, { width: 80 });
-          doc.text('Prénom', margin + 120, y, { width: 80 });
-          doc.text('Email', margin + 205, y, { width: 170 });
-          doc.text('Classe', margin + 380, y, { width: 70 });
-          doc.text('Statut', margin + 455, y, { width: 70 });
-          doc
-            .moveTo(margin, y + 14)
-            .lineTo(pageWidth - margin, y + 14)
-            .stroke();
+            .text('N°', colPositions[0] + 5, y + 5, { width: colWidths[0] - 10 });
+          doc.text('Nom', colPositions[1] + 5, y + 5, { width: colWidths[1] - 10 });
+          doc.text('Prénom', colPositions[2] + 5, y + 5, { width: colWidths[2] - 10 });
+          doc.text('Email', colPositions[3] + 5, y + 5, { width: colWidths[3] - 10 });
+          doc.text('Classe', colPositions[4] + 5, y + 5, { width: colWidths[4] - 10 });
+          doc.text('Statut', colPositions[5] + 5, y + 5, { width: colWidths[5] - 10 });
+
           doc.moveDown(1);
         };
 
@@ -73,28 +102,44 @@ export class PdfGenerationService {
           }
 
           const y = doc.y;
+          const tableWidth = colWidths.reduce((sum, width) => sum + width, 0);
+
+          // Fond alterné pour les lignes
           if (index % 2 === 0) {
             doc
-              .rect(margin, y - 4, pageWidth - 2 * margin, rowHeight)
+              .rect(margin, y - 2, tableWidth, rowHeight)
               .fill('#F5F5F5')
               .fillColor('#000000');
           }
 
+          // Bordures de la ligne
+          doc
+            .rect(margin, y - 2, tableWidth, rowHeight)
+            .stroke();
+
+          // Lignes verticales pour les colonnes
+          colPositions.forEach((x, colIndex) => {
+            if (colIndex > 0) {
+              doc
+                .moveTo(x, y - 2)
+                .lineTo(x, y - 2 + rowHeight)
+                .stroke();
+            }
+          });
+
           const classe = inscription.classe || inscription.promo || '-';
           const statut = inscription.statut || '-';
 
-          doc.text(String(index + 1), margin, y, { width: 30 });
-          doc.text((inscription.nom || '-').slice(0, 30), margin + 35, y, {
-            width: 80,
-          });
-          doc.text((inscription.prenom || '-').slice(0, 30), margin + 120, y, {
-            width: 80,
-          });
-          doc.text((inscription.email || '-').slice(0, 45), margin + 205, y, {
-            width: 170,
-          });
-          doc.text(classe.slice(0, 15), margin + 380, y, { width: 70 });
-          doc.text(statut.slice(0, 15), margin + 455, y, { width: 70 });
+          // Écrire les données dans chaque cellule
+          doc
+            .fontSize(9)
+            .font('Helvetica')
+            .text(String(index + 1), colPositions[0] + 5, y + 2, { width: colWidths[0] - 10 });
+          doc.text((inscription.nom || '-').slice(0, 18), colPositions[1] + 5, y + 2, { width: colWidths[1] - 10 });
+          doc.text((inscription.prenom || '-').slice(0, 18), colPositions[2] + 5, y + 2, { width: colWidths[2] - 10 });
+          doc.text((inscription.email || '-').slice(0, 35), colPositions[3] + 5, y + 2, { width: colWidths[3] - 10 });
+          doc.text(classe.slice(0, 15), colPositions[4] + 5, y + 2, { width: colWidths[4] - 10 });
+          doc.text(statut.slice(0, 15), colPositions[5] + 5, y + 2, { width: colWidths[5] - 10 });
 
           doc.moveDown(1);
         });

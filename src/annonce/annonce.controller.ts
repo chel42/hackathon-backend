@@ -81,9 +81,8 @@ export class AnnonceController {
   @ApiResponse({ status: 401, description: 'Non autorisé' })
   @ApiResponse({ status: 403, description: 'Accès refusé - Admin uniquement' })
   @ApiResponse({ status: 404, description: 'Hackathon non trouvé' })
-  async create(@Body() createAnnonceDto: any, @Request() req: any) {
-    const userId = req.user?.id;
-    return this.annonceService.create(createAnnonceDto, userId);
+  async create(@Body() createAnnonceDto: any, @Request() req) {
+    return this.annonceService.create(createAnnonceDto, req.user.id);
   }
 
   @Put('admin/annonces/:id')

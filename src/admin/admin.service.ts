@@ -5,6 +5,7 @@ import {
   NotFoundException,
   BadRequestException,
 } from '@nestjs/common';
+import * as bcrypt from 'bcrypt';
 import { PrismaService } from '../prisma/prisma.service';
 import { HackathonStatus, TypeIALog } from '@prisma/client';
 import { EventsGateway } from '../events/events.gateway';
@@ -433,5 +434,92 @@ export class AdminService {
       },
       timestamp: maintenant,
     };
+  }
+
+  /**
+   * Récupérer le profil d'un utilisateur
+   */
+  async getUserProfile(userId: string) {
+    const user = await this.prisma.user.findUnique({
+      where: { id: userId },
+      select: {
+        id: true,
+        email: true,
+        nom: true,
+        prenom: true,
+        role: true,
+        createdAt: true,
+        updatedAt: true,
+      },
+    });
+
+    if (!user) {
+      throw new NotFoundException('Utilisateur non trouvé');
+    }
+
+    return user;
+  }
+
+  /**
+   * Mettre à jour le profil d'un utilisateur
+   */
+  async updateUserProfile(userId: string, updateData: { nom?: string; prenom?: string; email?: string; currentPassword?: string; newPassword?: string }) {
+    const user = await this.prisma.user.findUnique({
+      where: { id: userId },
+    });
+
+    if (!user) {
+      throw new NotFoundException('Utilisateur non trouvé');
+    }
+
+    // Vérifier si l'email est déjà utilisé par quelqu'un d'autre
+    if (updateData.email && updateData.email !== user.email) {
+      const existingUser = await this.prisma.user.findUnique({
+        where: { email: updateData.email },
+      });
+      if (existingUser) {
+        throw new BadRequestException('Cet email est déjà utilisé par un autre utilisateur');
+      }
+    }
+
+    // Préparer les données de mise à jour
+    const updatePayload: any = {};
+
+    // Si on veut changer le mot de passe, vérifier l'ancien
+    if (updateData.newPassword) {
+      if (!updateData.currentPassword) {
+        throw new BadRequestException('Le mot de passe actuel est requis pour changer le mot de passe');
+      }
+
+      // Vérifier le mot de passe actuel
+      const isPasswordValid = await bcrypt.compare(updateData.currentPassword, user.password);
+      if (!isPasswordValid) {
+        throw new BadRequestException('Le mot de passe actuel est incorrect');
+      }
+
+      // Hasher le nouveau mot de passe
+      const hashedPassword = await bcrypt.hash(updateData.newPassword, 10);
+      updatePayload.password = hashedPassword;
+    }
+
+    // Ajouter les autres champs de mise à jour
+    if (updateData.nom !== undefined) updatePayload.nom = updateData.nom;
+    if (updateData.prenom !== undefined) updatePayload.prenom = updateData.prenom;
+    if (updateData.email !== undefined) updatePayload.email = updateData.email;
+
+    const updatedUser = await this.prisma.user.update({
+      where: { id: userId },
+      data: updatePayload,
+      select: {
+        id: true,
+        email: true,
+        nom: true,
+        prenom: true,
+        role: true,
+        updatedAt: true,
+      },
+    });
+
+    return updatedUser;
   }
 }

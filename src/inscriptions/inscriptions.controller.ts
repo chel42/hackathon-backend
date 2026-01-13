@@ -73,43 +73,4 @@ export class InscriptionsController {
       req.user.role,
     );
   }
-
-  @Get('hackathon/:hackathonId')
-  @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(Role.ADMIN)
-  @ApiBearerAuth()
-  @ApiParam({ name: 'hackathonId', description: "ID du hackathon" })
-  @ApiOperation({ summary: 'Récupérer toutes les inscriptions d\'un hackathon (Admin seulement)' })
-  @ApiResponse({
-    status: 200,
-    description: 'Liste des inscriptions du hackathon',
-  })
-  @ApiResponse({ status: 401, description: 'Non autorisé' })
-  @ApiResponse({ status: 403, description: 'Accès refusé - Admin requis' })
-  @ApiResponse({ status: 404, description: 'Hackathon non trouvé' })
-  async getInscriptionsByHackathon(@Param('hackathonId') hackathonId: string) {
-    return this.inscriptionsService.getInscriptionsByHackathon(hackathonId);
-  }
-
-  @Delete('admin/user/:userId/hackathon/:hackathonId')
-  @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(Role.ADMIN)
-  @ApiBearerAuth()
-  @ApiParam({ name: 'userId', description: "ID de l'utilisateur" })
-  @ApiParam({ name: 'hackathonId', description: "ID du hackathon" })
-  @ApiOperation({ summary: 'Supprimer une inscription utilisateur (Admin seulement)' })
-  @ApiResponse({
-    status: 200,
-    description: 'Inscription supprimée avec succès',
-  })
-  @ApiResponse({ status: 401, description: 'Non autorisé' })
-  @ApiResponse({ status: 403, description: 'Accès refusé - Admin requis' })
-  @ApiResponse({ status: 404, description: 'Inscription non trouvée' })
-  async deleteUserInscription(
-    @Param('userId') userId: string,
-    @Param('hackathonId') hackathonId: string,
-    @Request() req
-  ) {
-    return this.inscriptionsService.deleteUserInscription(userId, hackathonId);
-  }
 }

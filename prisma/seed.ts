@@ -181,11 +181,11 @@ async function main() {
     create: {
       id: hackathonOngoingId,
       nom: 'Hackathon Développement Web 2026',
-      description: 'Innover. Créer. Collaborer. Un week-end. Des possibilités infinies.',
+      description: 'Hackathon en cours sur le développement web moderne',
       themes: ['React', 'Next.js', 'TypeScript', 'Node.js'],
-      dateDebut: new Date('2026-01-12T06:00:00Z'),
-      dateFin: new Date('2026-01-20T14:00:00Z'),
-      dateLimiteInscription: new Date('2026-01-15T22:59:00Z'),
+      dateDebut: new Date('2026-01-10T09:00:00Z'),
+      dateFin: new Date('2026-01-12T18:00:00Z'),
+      dateLimiteInscription: new Date('2026-01-08T23:59:59Z'),
       status: HackathonStatus.ONGOING,
     },
   });

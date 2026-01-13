@@ -48,9 +48,8 @@ export class AdminController {
   @ApiResponse({ status: 401, description: 'Non autorisé' })
   @ApiResponse({ status: 403, description: 'Accès refusé - Admin uniquement' })
   @ApiResponse({ status: 404, description: 'Hackathon non trouvé' })
-  async createAnnonce(@Body() createAnnonceDto: any, @Request() req: any) {
-    const userId = req.user?.id;
-    return this.annonceService.create(createAnnonceDto, userId);
+  async createAnnonce(@Body() createAnnonceDto: any, @Request() req) {
+    return this.annonceService.create(createAnnonceDto, req.user.id);
   }
 
   @Get('dashboard')
@@ -221,4 +220,25 @@ export class AdminController {
   async deleteUser(@Param('id') id: string) {
     return this.adminService.deleteUser(id);
   }
+
+  @Get('profile')
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Récupérer le profil de l\'utilisateur connecté' })
+  @ApiResponse({ status: 200, description: 'Profil récupéré avec succès' })
+  async getProfile(@Request() req) {
+    return this.adminService.getUserProfile(req.user.id);
+  }
+
+  @Put('profile')
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Mettre à jour le profil de l\'utilisateur connecté' })
+  @ApiResponse({ status: 200, description: 'Profil mis à jour avec succès' })
+  async updateProfile(@Request() req, @Body() updateData: { nom?: string; prenom?: string; email?: string; currentPassword?: string; newPassword?: string }) {
+    return this.adminService.updateUserProfile(req.user.id, updateData);
+  }
 }
+
+
+

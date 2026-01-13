@@ -11,8 +11,14 @@ export class QueueService {
 
   async addEmailJob(type: string, data: any) {
     // Envoi direct via SMTP (Redis/BullMQ désactivé)
-    this.logger.debug(`Envoi email direct (${type}) via SMTP`);
-    return this.sendDirectEmail(type, data);
+    this.logger.log(`📧 Envoi email direct (${type}) à ${data.email}`);
+    const result = await this.sendDirectEmail(type, data);
+    if (result) {
+      this.logger.log(`✅ Email envoyé avec succès (${type}) à ${data.email}`);
+    } else {
+      this.logger.error(`❌ Échec envoi email (${type}) à ${data.email}`);
+    }
+    return result;
   }
 
   private async sendDirectEmail(type: string, data: any) {
@@ -28,7 +34,9 @@ export class QueueService {
             data.email,
             data.nom,
             data.prenom,
-            data.hackathonId,
+            data.promo,
+            data.technologies,
+            data.hackathon,
           );
         case 'annonce_inscrits':
           return await this.emailService.sendAnnonceInscrits(
@@ -50,4 +58,3 @@ export class QueueService {
     }
   }
 }
-
