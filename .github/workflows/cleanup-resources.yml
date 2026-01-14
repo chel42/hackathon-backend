@@ -1,0 +1,14 @@
+name: Cleanup temporary deployment
+
+on:
+  schedule:
+    - cron: '0 4 * * *' # daily check at 04:00 UTC
+
+jobs:
+  cleanup-if-old:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check for expired deployment
+        run: |
+          # This is a placeholder. Implement logic to check tag/age and remove resources.
+          echo "No-op cleanup job. Configure with required secrets to enable automatic cleanup."

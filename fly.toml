@@ -1,0 +1,10 @@
+app = "hackathon-backend"
+kill_signal = "SIGINT"
+kill_timeout = 5
+processes = []
+
+[build]
+  image = "ghcr.io/CG242/hackathon-backend:${GITHUB_SHA}"
+
+[env]
+  PORT = "3000"
