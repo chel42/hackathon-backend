@@ -28,7 +28,8 @@
     "prisma:seed": "ts-node prisma/seed.ts",
     "prisma:deploy": "prisma migrate deploy",
     "prisma:setup": "npm run prisma:generate && npm run prisma:deploy && npm run prisma:seed",
-    "create-congo-teams": "ts-node prisma/create-congo-teams.ts"
+    "create-congo-teams": "ts-node prisma/create-congo-teams.ts",
+    "bundle": "npx @vercel/ncc build dist/src/main.js -o dist-bundle --minify"
   },
   "prisma": {
     "seed": "ts-node prisma/seed.ts"
@@ -94,7 +95,8 @@
     "ts-node": "^10.9.2",
     "tsconfig-paths": "^4.2.0",
     "typescript": "^5.7.3",
-    "typescript-eslint": "^8.20.0"
+    "typescript-eslint": "^8.20.0",
+    "@vercel/ncc": "^0.36.0"
   },
   "jest": {
     "moduleFileExtensions": [

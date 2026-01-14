@@ -1,0 +1,36 @@
+version: '3.8'
+
+services:
+  db:
+    image: postgres:15
+    restart: always
+    environment:
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: hackathon
+    volumes:
+      - db-data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+
+  adminer:
+    image: adminer
+    restart: always
+    ports:
+      - "8080:8080"
+
+  app:
+    build: .
+    restart: on-failure
+    environment:
+      DATABASE_URL: "postgresql://user:password@db:5432/hackathon?schema=public"
+      JWT_SECRET: "changeme"
+      PORT: 3000
+    depends_on:
+      - db
+    ports:
+      - "3000:3000"
+    command: ["node", "dist/server-minimal.js"]
+
+volumes:
+  db-data:
