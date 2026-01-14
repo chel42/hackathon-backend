@@ -18,27 +18,25 @@ COPY . .
 RUN npm run prisma:generate
 RUN npm run build
 
-# Bundle into a single JS file to reduce runtime footprint
-RUN npm run bundle
+# Install production-only dependencies for the runtime image
+RUN npm ci --omit=dev --no-audit --no-fund --production
+
+# Re-generate Prisma client after production install to ensure runtime artifacts are present
+RUN npm run prisma:generate
 
 # Ensure proper ownership for non-root user
 RUN chown -R node:node /app
 
-# Runner (slim, production-only deps)
+# Runner (ultra-slim: rely on bundle + prisma artifacts only)
 FROM node:20-slim AS runner
 WORKDIR /app
 ENV NODE_ENV=production
 ENV PORT=3000
 
-# Install only production dependencies in the runtime image
-COPY package.json package-lock.json ./
-RUN npm ci --omit=dev --no-audit --no-fund
-
-# Copy bundled artifact and Prisma artifacts
-COPY --from=builder /app/dist-bundle ./dist-bundle
+# Copy build artifact, Prisma artifacts and production node_modules
+COPY --from=builder /app/dist ./dist
 COPY --from=builder /app/prisma ./prisma
-COPY --from=builder /app/node_modules/@prisma ./node_modules/@prisma
-COPY --from=builder /app/node_modules/.prisma ./node_modules/.prisma
+COPY --from=builder /app/node_modules ./node_modules
 
 # Expose port and prepare runtime directories
 EXPOSE 3000
@@ -47,5 +45,5 @@ RUN mkdir -p /app/logs /app/uploads/pdfs && chown -R node:node /app/logs /app/up
 # Run as non-root
 USER node
 
-# Default command (run bundle)
-CMD ["node", "dist-bundle/index.js"]
+# Default command
+CMD ["node", "dist/src/main.js"]
